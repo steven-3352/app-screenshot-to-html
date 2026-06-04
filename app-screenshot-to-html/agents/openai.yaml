@@ -1,4 +1,4 @@
 interface:
   display_name: "App Screenshot To HTML"
-  short_description: "Recreate app screenshots as HTML/CSS"
-  default_prompt: "Use $app-screenshot-to-html to recreate this mobile app screenshot as high-fidelity HTML/CSS."
+  short_description: "Recreate app screenshots and generate needed image assets"
+  default_prompt: "Use $app-screenshot-to-html to recreate this mobile app screenshot as high-fidelity HTML/CSS, generating or editing image assets when needed."

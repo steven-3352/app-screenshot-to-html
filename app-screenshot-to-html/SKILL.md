@@ -1,6 +1,6 @@
 ---
 name: app-screenshot-to-html
-description: Reconstruct mobile app page screenshots as high-fidelity HTML/CSS. Use when the user uploads or references an iOS, Android, mini-program, mobile H5, or app-like page screenshot and asks to recreate, restore, convert, reproduce, or implement the screen as HTML, CSS, a standalone web page, or a frontend prototype.
+description: Reconstruct mobile app page screenshots as high-fidelity HTML/CSS, and generate or edit bitmap image assets for those reconstructions when needed. Use when the user uploads or references an iOS, Android, mini-program, mobile H5, or app-like page screenshot and asks to recreate, restore, convert, reproduce, or implement the screen as HTML, CSS, a standalone web page, or a frontend prototype; also use when the user asks this skill to create, redraw, edit, fuse, or replace photos, avatars, illustrations, icons, posters, product images, backgrounds, or other raster assets with GPT Image 2 image generation models.
 ---
 
 # App Screenshot To HTML
@@ -12,6 +12,8 @@ Recreate the supplied mobile app screenshot as a browser-rendered HTML/CSS page 
 ## Default Output
 
 Create a standalone HTML file unless the user explicitly asks for React, Vue, Tailwind, or another framework. Keep the rendered viewport the same size and aspect ratio as the source screenshot whenever possible.
+
+When the user asks for image creation or image editing as part of the work, create raster image files and then use them in the HTML/CSS output when appropriate. Keep model choice internal and do not ask the user to choose between `gpt-image-2` and `gpt-image-2-all`.
 
 ## Workflow
 
@@ -27,6 +29,22 @@ Create a standalone HTML file unless the user explicitly asks for React, Vue, Ta
 5. Render the page in a browser at the source screenshot dimensions.
 6. Capture a screenshot and compare it with the source.
 7. Iterate on spacing, sizing, color, typography, and missing elements until the result is visually close.
+
+## Image Generation Branch
+
+Use this branch when the task needs a new raster image, replacement asset, edited source image, or reference-image fusion.
+
+1. Infer image intent from the user's prompt:
+   - Text-to-image: no reference image is needed.
+   - Image-to-image, editing, style transfer, redraw, fusion, or asset replacement: one or more reference images are needed.
+2. If the user did not specify generation parameters, ask once whether they want to set them. Mention only user-facing parameters: size/aspect, quality, output count, output format, background, negative prompt, and output folder. Do not expose model names.
+3. If the user leaves parameters unset or says to use defaults, use `1024x1024`, `high`, `1`, `png`, `auto` background, no negative prompt, and the current task output folder.
+4. Read `references/image-generation.md` before calling image generation.
+5. Select the model internally:
+   - Use `gpt-image-2` for straightforward text-to-image.
+   - Use `gpt-image-2-all` when any reference image, image editing, redraw, multi-image fusion, or preserve-from-input requirement is present.
+6. Generate the image asset, save it as a file, inspect the result when possible, and iterate if it misses the requested visual intent.
+7. When using generated assets in a reconstructed page, keep the page layout real HTML/CSS and reference the asset file; do not use a full-page generated image as a shortcut for UI reconstruction.
 
 ## Reconstruction Rules
 
@@ -64,6 +82,17 @@ python3 app-screenshot-to-html/scripts/compare_screenshots.py source.png rendere
 
 Use the numeric result as guidance, not as the only quality signal. A low pixel difference can still hide important text or alignment mistakes.
 
+## Image Generation Helper
+
+Use `scripts/generate_image.py` for GPT Image 2 generation/editing when API credentials are available:
+
+```bash
+python3 app-screenshot-to-html/scripts/generate_image.py --prompt prompt.txt --out-dir generated-assets
+python3 app-screenshot-to-html/scripts/generate_image.py --prompt prompt.txt --image ref.png --out-dir generated-assets
+```
+
+The script chooses the image model from the presence of reference images and writes output files plus a JSON manifest.
+
 ## Final Response
 
-Report the output path, viewport size used, verification performed, and any fidelity limitations such as unknown fonts, missing icons, or unavailable image assets.
+Report the output path, viewport size used, verification performed, generated asset paths when any, and any fidelity limitations such as unknown fonts, missing icons, unavailable image assets, or image generation parameters left at defaults.
