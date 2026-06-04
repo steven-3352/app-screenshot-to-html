@@ -110,7 +110,7 @@ Use $app-screenshot-to-html to recreate this mobile app screenshot as high-fidel
 做图脚本会自动读取 `~/.codex/.env`。本地配置文件不要提交到仓库，格式如下：
 
 ```bash
-GPT_IMAGE_2_BASE_URL="https://us.tonbirds.com/v1"
+GPT_IMAGE_2_BASE_URL="https://your-image-api-base-url/v1"
 GPT_IMAGE_2_API_KEY="xxxxx"
 ```
 

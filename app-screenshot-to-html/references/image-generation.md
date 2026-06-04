@@ -76,7 +76,7 @@ The helper reads credentials from process environment variables and then from `$
 Example `~/.codex/.env`:
 
 ```bash
-GPT_IMAGE_2_BASE_URL="https://us.tonbirds.com/v1"
+GPT_IMAGE_2_BASE_URL="https://your-image-api-base-url/v1"
 GPT_IMAGE_2_API_KEY="xxxxx"
 ```
 
