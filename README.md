@@ -63,6 +63,7 @@ cp -R app-screenshot-to-html ~/.codex/skills/
     ├── agents/openai.yaml
     ├── references/image-generation.md
     ├── references/mobile-ui-reconstruction.md
+    ├── scripts/html_element_editor.mjs
     ├── scripts/generate_image.py
     └── scripts/compare_screenshots.py
 ```
@@ -104,6 +105,67 @@ Use $app-screenshot-to-html to recreate this mobile app screenshot as high-fidel
 ```text
 使用 $app-screenshot-to-html，把这张 App 截图还原成 Vue 单文件组件。
 ```
+
+## 按编号修改 HTML 元素
+
+Skill 里包含一个给 Codex 和产品经理协作使用的小工具：
+
+```text
+app-screenshot-to-html/scripts/html_element_editor.mjs
+```
+
+它适合在页面已经生成之后继续调整内容和样式。Codex 输入本地 HTML 文件，工具会生成一个带编号的预览页和元素映射；产品经理只需要看编号，然后告诉 Codex“把 12 改成什么”。
+
+生成编号预览：
+
+```bash
+node app-screenshot-to-html/scripts/html_element_editor.mjs scan ./index.html --name homepage
+```
+
+输出文件默认在 `.codex-html-editor/`：
+
+```text
+.codex-html-editor/homepage.numbered.html
+.codex-html-editor/homepage.map.json
+```
+
+把 `.numbered.html` 打开给产品经理看。页面上的可编辑元素会显示蓝色描边和编号，点击编号或元素可以锁定选中项。
+
+查看映射表：
+
+```bash
+node app-screenshot-to-html/scripts/html_element_editor.mjs list .codex-html-editor/homepage.map.json
+```
+
+按编号修改元素内部文案：
+
+```bash
+node app-screenshot-to-html/scripts/html_element_editor.mjs text .codex-html-editor/homepage.map.json 12 "立即开始"
+```
+
+按编号追加或覆盖 inline 样式：
+
+```bash
+node app-screenshot-to-html/scripts/html_element_editor.mjs style .codex-html-editor/homepage.map.json 12 "background: #111827; color: white; border-radius: 6px"
+```
+
+按编号修改属性，比如图片说明、链接地址、输入框占位文案：
+
+```bash
+node app-screenshot-to-html/scripts/html_element_editor.mjs attr .codex-html-editor/homepage.map.json 8 alt "产品控制台截图"
+```
+
+每次写回源 HTML 前，工具会自动生成 `.bak.timestamp` 备份，并刷新编号预览和映射。
+
+给产品经理的沟通方式可以很简单：
+
+```text
+把 12 的按钮文案改成“立即开始”
+把 18 的背景改成黑色，文字改成白色
+把 7 的图片说明改成“产品控制台截图”
+```
+
+注意：这个工具直接修改本地静态 HTML。React、Vue、Tailwind 等项目也可以用它生成编号预览来沟通，但最终最好让 Codex 根据编号回到组件源码里修改。
 
 ## 图片生成配置和用法
 
@@ -255,6 +317,7 @@ app-screenshot-to-html/
     ├── agents/openai.yaml
     ├── references/image-generation.md
     ├── references/mobile-ui-reconstruction.md
+    ├── scripts/html_element_editor.mjs
     ├── scripts/generate_image.py
     └── scripts/compare_screenshots.py
 ```
@@ -265,6 +328,7 @@ app-screenshot-to-html/
 - `agents/openai.yaml`：Codex UI 中展示 Skill 的名称、简介和默认提示词
 - `references/image-generation.md`：做图模型选择、参数提醒和 API 调用参考
 - `references/mobile-ui-reconstruction.md`：移动端 App 页面复刻参考规范
+- `scripts/html_element_editor.mjs`：生成 HTML 编号预览，并按编号修改文案、样式和属性
 - `scripts/generate_image.py`：文生图/图生图辅助脚本
 - `scripts/compare_screenshots.py`：原图和渲染截图的差异对比脚本
 
@@ -280,6 +344,12 @@ python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py ./app-sc
 
 ```bash
 python3 -m py_compile app-screenshot-to-html/scripts/compare_screenshots.py
+```
+
+如果你改了 HTML 编号编辑脚本，可以做 Node 语法检查：
+
+```bash
+node --check app-screenshot-to-html/scripts/html_element_editor.mjs
 ```
 
 ## 重要限制

@@ -4,5 +4,7 @@ __pycache__/
 node_modules/
 dist/
 build/
+.codex-html-editor/
+*.bak.*
 *.diff.png
 *.render.png

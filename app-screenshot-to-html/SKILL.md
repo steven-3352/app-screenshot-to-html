@@ -82,6 +82,34 @@ python3 app-screenshot-to-html/scripts/compare_screenshots.py source.png rendere
 
 Use the numeric result as guidance, not as the only quality signal. A low pixel difference can still hide important text or alignment mistakes.
 
+## HTML Element Numbering Helper
+
+Use `scripts/html_element_editor.mjs` when the user wants a product manager or non-technical reviewer to identify page elements by number and request copy/style/attribute changes.
+
+Generate a numbered preview and mapping from a local static HTML file:
+
+```bash
+node app-screenshot-to-html/scripts/html_element_editor.mjs scan ./index.html --name homepage
+```
+
+Open `.codex-html-editor/homepage.numbered.html` for the reviewer. The preview outlines editable elements and labels them with stable numbers for that scan. Keep `.codex-html-editor/homepage.map.json` for follow-up edits.
+
+List the mapped elements:
+
+```bash
+node app-screenshot-to-html/scripts/html_element_editor.mjs list .codex-html-editor/homepage.map.json
+```
+
+Apply reviewer requests by number:
+
+```bash
+node app-screenshot-to-html/scripts/html_element_editor.mjs text .codex-html-editor/homepage.map.json 12 "立即开始"
+node app-screenshot-to-html/scripts/html_element_editor.mjs style .codex-html-editor/homepage.map.json 12 "background: #111827; color: white"
+node app-screenshot-to-html/scripts/html_element_editor.mjs attr .codex-html-editor/homepage.map.json 8 alt "产品控制台截图"
+```
+
+The helper writes a timestamped backup before changing the source HTML, then refreshes the map and preview. For React, Vue, Tailwind, or other source-driven projects, use this helper for reviewer communication, then prefer editing the component/source files instead of built HTML.
+
 ## Image Generation Helper
 
 Use `scripts/generate_image.py` for GPT Image 2 generation/editing when API credentials are available:
