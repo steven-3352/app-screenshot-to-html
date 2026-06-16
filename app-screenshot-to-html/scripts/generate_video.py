@@ -24,8 +24,8 @@ from typing import Any
 DOTENV_LOADED = False
 DEFAULT_ENDPOINT = "/v1/videos"
 DEFAULT_GROK_JSON_ENDPOINT = "/v1/video/create"
-DEFAULT_YUNWU_POLL_ENDPOINT = "/v1/videos/{id}"
-DEFAULT_BODY_FORMAT = "yunwu-videos"
+DEFAULT_VIDEOS_POLL_ENDPOINT = "/v1/videos/{id}"
+DEFAULT_BODY_FORMAT = "openai-videos"
 GROK_SPECIAL_MODELS = {"grok-video-3", "grok-video-3-10s", "grok-video-3-15s"}
 
 
@@ -46,18 +46,18 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--body-format",
         default=DEFAULT_BODY_FORMAT,
-        choices=["yunwu-videos", "grok-json", "json", "multipart"],
-        help="Request body shape. Default matches Yunwu POST /v1/videos.",
+        choices=["openai-videos", "grok-json", "json", "multipart"],
+        help="Request body shape. Default matches the OpenAI-style POST /v1/videos.",
     )
     parser.add_argument(
         "--image-field",
         default="input_reference",
-        help="Field name for an image URL in multipart/yunwu-videos mode.",
+        help="Field name for an image URL in multipart/openai-videos mode.",
     )
     parser.add_argument(
         "--file-field",
         default="input_reference",
-        help="Field name for a local image file in multipart/yunwu-videos mode.",
+        help="Field name for a local image file in multipart/openai-videos mode.",
     )
     parser.add_argument("--poll-endpoint", default="", help="Optional status endpoint for async tasks.")
     parser.add_argument("--poll-interval", default=5.0, type=float)
@@ -220,7 +220,7 @@ def request_json(url: str, headers: dict[str, str], body: bytes, timeout: float)
         detail = exc.read().decode("utf-8", "replace")[:1600]
         if exc.code == 429 and "no available platform found" in detail:
             detail += (
-                "\nHint: Yunwu accepted the request shape, but the selected upstream model "
+                "\nHint: the provider accepted the request shape, but the selected upstream model "
                 "has no available platform. Retry later or try --model grok-videos, or "
                 "--body-format grok-json --model grok-video-3."
             )
@@ -485,7 +485,7 @@ def is_grok_special_model(model: str) -> bool:
 
 
 def build_payload(args: argparse.Namespace, model: str, prompt: str) -> dict[str, Any]:
-    if args.body_format == "yunwu-videos":
+    if args.body_format == "openai-videos":
         seconds = duration_seconds(args.duration)
         if (args.model or model) == "grok-video-3-10s":
             try:
@@ -596,12 +596,12 @@ def validate_request_args(args: argparse.Namespace, payload: dict[str, Any]) -> 
     model = str(payload.get("model") or "")
     if is_grok_special_model(model) and not args.image:
         raise RuntimeError(
-            f"{model} requires --image. The Yunwu Grok special-video path sends a reference image as multipart input_reference."
+            f"{model} requires --image. The Grok special-video path sends a reference image as multipart input_reference."
         )
     if args.body_format == "grok-json" and is_grok_special_model(model) and args.image and not is_url(args.image):
         raise RuntimeError(
             "The grok-json /v1/video/create format only supports image URLs in the images array. "
-            "Use the default yunwu-videos multipart format for local reference images."
+            "Use the default openai-videos multipart format for local reference images."
         )
 
 
@@ -614,8 +614,8 @@ def effective_endpoint(args: argparse.Namespace) -> str:
 def poll_endpoint_for(args: argparse.Namespace) -> str:
     if args.poll_endpoint:
         return args.poll_endpoint
-    if args.body_format == "yunwu-videos":
-        return DEFAULT_YUNWU_POLL_ENDPOINT
+    if args.body_format == "openai-videos":
+        return DEFAULT_VIDEOS_POLL_ENDPOINT
     return ""
 
 

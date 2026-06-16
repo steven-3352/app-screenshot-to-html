@@ -88,7 +88,7 @@ For `gpt-image-2`:
 For `gpt-image-2-all`:
 
 - API key: `GPT_IMAGE_2_ALL_API_KEY`, `GUI_SORA2_KEY`, `GPT_IMAGE_2_API_KEY`, then `OPENAI_API_KEY`
-- Base URL: `GPT_IMAGE_2_ALL_BASE_URL`, `SORA2_API_BASE_URL`, `GPT_IMAGE_2_BASE_URL`, `OPENAI_BASE_URL`, `BASE_URL`, `base_url`, then `https://yunwu.ai`. Prefer `GPT_IMAGE_2_ALL_BASE_URL` for a dedicated edit/fusion endpoint, or `GPT_IMAGE_2_BASE_URL` when both models share the same endpoint.
+- Base URL: `GPT_IMAGE_2_ALL_BASE_URL`, `SORA2_API_BASE_URL`, `GPT_IMAGE_2_BASE_URL`, `OPENAI_BASE_URL`, `BASE_URL`, then `base_url`. This model has no default base URL, so one of these must be set. Prefer `GPT_IMAGE_2_ALL_BASE_URL` for a dedicated edit/fusion endpoint, or `GPT_IMAGE_2_BASE_URL` when both models share the same endpoint.
 
 If credentials are missing, stop and tell the user which environment variable is needed. Do not invent a key or silently fall back to an unrelated provider.
 

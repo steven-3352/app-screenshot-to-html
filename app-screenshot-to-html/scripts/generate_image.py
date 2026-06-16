@@ -180,8 +180,7 @@ def auth_for_model(model: str) -> tuple[str, str]:
                 "OPENAI_BASE_URL",
                 "BASE_URL",
                 "base_url",
-            ],
-            "https://yunwu.ai",
+            ]
         )
     else:
         api_key = env_first(["GPT_IMAGE_2_API_KEY", "OPENAI_API_KEY"])
@@ -196,6 +195,11 @@ def auth_for_model(model: str) -> tuple[str, str]:
         else:
             needed = "GPT_IMAGE_2_API_KEY or OPENAI_API_KEY"
         raise RuntimeError(f"Missing API key for {model}; set {needed}.")
+
+    if not base_url:
+        raise RuntimeError(
+            f"Missing base URL for {model}; set GPT_IMAGE_2_ALL_BASE_URL or GPT_IMAGE_2_BASE_URL."
+        )
 
     base_url = normalize_base_url(base_url)
     return api_key, base_url

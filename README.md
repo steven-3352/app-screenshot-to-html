@@ -228,15 +228,24 @@ python3 app-screenshot-to-html/scripts/generate_image.py --prompt prompt.txt --i
 
 如果用户输入里有低俗或高风险表达，Skill 会把它改写成安全视觉意图，比如把“擦边/过审”改成“平台友好、合规表达”，把“挑逗/勾引”改成“有吸引力的镜头互动”。它不会帮助规避平台审核、伪装 AI 成真人、生成未成年感、裸露或露骨性内容。
 
-视频 API 默认从本地环境读取下面几个变量。不要把真实 key 提交到仓库：
+视频 API 默认从本地环境读取下面几个变量。key 和 base URL 只从环境变量读取，换供应商只改配置、不用改代码。不要把真实 key 提交到仓库：
 
 ```bash
 VIDEO_API_KEY="sk-..."
-VIDEO_API_BASE_URL="https://yunwu.ai"
+VIDEO_API_BASE_URL="https://your-video-api-base-url"
 VIDEO_MODEL="grok-video-3-10s"
 ```
 
-Yunwu Grok 视频文档当前对应默认接口 `POST /v1/videos`，请求体为 `multipart/form-data`，字段包括 `model`、`prompt`、`seconds`、`size` 和 `input_reference` 参考图文件。`grok-video-3-10s` 会把请求时长归一到 10 秒以内、尺寸归一到 `720P`。脚本会自动轮询 `GET /v1/videos/{id}`。如果上游返回 `no available platform found`，说明请求格式已通过但当前模型通道不可用；可稍后重试，或显式尝试 `--model grok-videos`，也可以用备用 JSON 格式 `--body-format grok-json --model grok-video-3`。
+Grok 视频文档当前对应默认接口 `POST /v1/videos`，请求体为 `multipart/form-data`，字段包括 `model`、`prompt`、`seconds`、`size` 和 `input_reference` 参考图文件。`grok-video-3-10s` 会把请求时长归一到 10 秒以内、尺寸归一到 `720P`。脚本会自动轮询 `GET /v1/videos/{id}`。如果上游返回 `no available platform found`，说明请求格式已通过但当前模型通道不可用；可稍后重试，或显式尝试 `--model grok-videos`，也可以用备用 JSON 格式 `--body-format grok-json --model grok-video-3`。
+
+### 有参考图 vs 没有参考图
+
+这个 Skill 出视频分两种情况，调用前先判断：
+
+- **有参考图**（用户上传的照片，或指定的某一帧）：直接把它当首帧，跳过首帧生成，调用 `generate_video.py --image 参考图路径`。
+- **没有参考图**：先用 `generate_image.py` 配合首帧提示词生成一张首帧图，确认效果后，再把这张图作为 `--image` 传给 `generate_video.py`。
+
+当前默认模型 `grok-video-3-10s` 必须带参考图（`input_reference`），所以“没有参考图”的情况一定要先生成首帧，再出视频。
 
 生成问题清单：
 
@@ -270,7 +279,16 @@ video-brief/
 └── negative-prompt.txt
 ```
 
-调用视频模型生成视频。当前默认 `grok-video-3-10s` 需要参考图：
+如果没有参考图，先用首帧提示词生成一张首帧：
+
+```bash
+python3 app-screenshot-to-html/scripts/generate_image.py \
+  --prompt video-brief/gpt-image2-keyframe-prompt.txt \
+  --out-dir video-brief \
+  --size 1024x1536 --quality high --format png
+```
+
+然后调用视频模型生成视频。当前默认 `grok-video-3-10s` 需要参考图，把参考图或上一步生成的首帧用 `--image` 传入：
 
 ```bash
 python3 app-screenshot-to-html/scripts/generate_video.py \
@@ -281,7 +299,7 @@ python3 app-screenshot-to-html/scripts/generate_video.py \
   --duration 10
 ```
 
-备用 Yunwu Grok JSON 格式：
+备用 Grok JSON 格式：
 
 ```bash
 python3 app-screenshot-to-html/scripts/generate_video.py \

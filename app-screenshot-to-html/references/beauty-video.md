@@ -109,6 +109,15 @@ Outputs:
 
 If the helper returns `needs_human_review`, inspect `safety_flags` and rewrite or refuse before generating.
 
+## Reference Image vs. No Reference Image
+
+Decide the path before calling the video helper:
+
+- **A reference image is available** (user-supplied photo, or a frame they point to): use it directly as the first frame. Skip first-frame generation and call `scripts/generate_video.py --image <path>`.
+- **No reference image**: generate a first frame first. Build the keyframe prompt, run `scripts/generate_image.py` to create a first frame, inspect it, then pass that file to `scripts/generate_video.py --image <generated-frame>`.
+
+The default `grok-video-3-10s` model requires a reference image (`input_reference`), so the no-reference path must always produce a first frame before video generation.
+
 ## Video API Helper
 
 Use `scripts/generate_video.py` when the user wants to call the configured video model. The helper reads credentials from process environment, `./.env`, `$CODEX_HOME/.env`, or `~/.codex/.env`.
@@ -117,11 +126,13 @@ Expected environment variables:
 
 ```bash
 VIDEO_API_KEY="sk-..."
-VIDEO_API_BASE_URL="https://yunwu.ai"
+VIDEO_API_BASE_URL="https://your-video-api-base-url"
 VIDEO_MODEL="grok-video-3-10s"
 ```
 
-For Yunwu Grok video, the documented OpenAI-style endpoint is `POST /v1/videos` with `multipart/form-data` fields:
+The video API key and base URL are read only from these environment variables, so swapping providers is a config change with no code edit.
+
+For the Grok video provider, the documented OpenAI-style endpoint is `POST /v1/videos` with `multipart/form-data` fields:
 
 - `model`
 - `prompt`
@@ -129,9 +140,9 @@ For Yunwu Grok video, the documented OpenAI-style endpoint is `POST /v1/videos` 
 - `input_reference` for the reference image file
 - `size`, usually `720P` for `grok-video-3-10s`
 
-The helper defaults to that endpoint and automatically polls `GET /v1/videos/{id}`. Yunwu's docs also list `grok-videos` for the OpenAI-style video model and `grok-video-3` for the JSON `/v1/video/create` format. If the configured `VIDEO_MODEL` returns `no available platform found`, retry later or pass one of those model names explicitly.
+The helper defaults to that endpoint (`--body-format openai-videos`) and automatically polls `GET /v1/videos/{id}`. The provider also exposes `grok-videos` for the OpenAI-style video model and `grok-video-3` for the JSON `/v1/video/create` format. If the configured `VIDEO_MODEL` returns `no available platform found`, retry later or pass one of those model names explicitly.
 
-Image-to-video with a GPT Image 2 first frame:
+Image-to-video with a first-frame image (a user-supplied reference or a generated first frame):
 
 ```bash
 python3 app-screenshot-to-html/scripts/generate_video.py \
@@ -144,7 +155,7 @@ python3 app-screenshot-to-html/scripts/generate_video.py \
 
 If an image reference is a local file, the helper sends it as the `input_reference` multipart file field. For `grok-video-3-10s`, local file input is the expected path. If you only have a URL, download it first or use a helper that uploads bytes.
 
-Alternative Yunwu Grok JSON format:
+Alternative Grok JSON format:
 
 ```bash
 python3 app-screenshot-to-html/scripts/generate_video.py \
@@ -164,7 +175,7 @@ python3 app-screenshot-to-html/scripts/generate_video.py \
   --out-dir video-brief/video-output
 ```
 
-For non-Yunwu provider APIs, pass `--endpoint`, `--body-format json` or `--body-format multipart`, and, for async jobs, `--poll-endpoint`, using `{id}` as the task id placeholder when needed.
+For other provider APIs, pass `--endpoint`, `--body-format json` or `--body-format multipart`, and, for async jobs, `--poll-endpoint`, using `{id}` as the task id placeholder when needed.
 
 Dry-run without calling the API:
 

@@ -66,9 +66,11 @@ Use this branch when the user wants an attractive adult woman short video, a GPT
    - `gpt-image2-keyframe-prompt.txt`
    - `video-model-prompt.txt`
    - `negative-prompt.txt`
-7. If a first-frame image is requested and credentials are available, use `scripts/generate_image.py` with the keyframe prompt, then inspect the image before using it for video generation.
-8. If the user wants to generate the video, use `scripts/generate_video.py`. It reads `VIDEO_API_KEY`, `VIDEO_API_BASE_URL`, and `VIDEO_MODEL` from environment files. For Yunwu, the helper defaults to `POST /v1/videos` and polls `GET /v1/videos/{id}`.
-9. If Yunwu returns `no available platform found`, the request shape is accepted but the upstream model is unavailable; retry later or try the documented model names `grok-videos` for `--body-format yunwu-videos` or `grok-video-3` for `--body-format grok-json`.
+7. Choose the first-frame path based on whether a reference image is available:
+   - If the user provides a reference image (a photo or an existing frame), use it directly as the first frame and skip first-frame generation.
+   - If there is no reference image, generate a first frame with `scripts/generate_image.py` using the keyframe prompt, then inspect it before using it for video.
+8. If the user wants to generate the video, use `scripts/generate_video.py` with the first-frame image passed as `--image`. It reads `VIDEO_API_KEY`, `VIDEO_API_BASE_URL`, and `VIDEO_MODEL` from environment files, so the key and base URL are config-only and require no code change. The helper defaults to `POST /v1/videos` and polls `GET /v1/videos/{id}`. The default `grok-video-3-10s` model requires a reference image, so always have a first frame ready.
+9. If the API returns `no available platform found`, the request shape is accepted but the upstream model is unavailable; retry later or try the documented model names `grok-videos` for `--body-format openai-videos` or `grok-video-3` for `--body-format grok-json`.
 10. Final prompts and videos should be sexy-but-not-vulgar: adult, tasteful, non-explicit, no underage styling, no celebrity likeness, no real-person cloning, and follow platform AI-content disclosure requirements.
 11. After generating a video, if the user wants a shareable post, use `scripts/beauty_video_xhs_package.py` to create a Xiaohongshu-ready caption, publish checklist, and local watch page that plays the generated MP4.
 
@@ -164,7 +166,7 @@ Use `scripts/generate_video.py` to call the configured Grok/video model:
 python3 app-screenshot-to-html/scripts/generate_video.py --prompt video-brief/video-model-prompt.txt --image video-brief/first-frame.png --out-dir video-brief/video-output --size 9:16 --duration 10
 ```
 
-For Yunwu Grok video, prefer `--size 9:16` for the creative brief, but `grok-video-3-10s` is normalized to `720P` for the upstream request. The default body format is `yunwu-videos`, which submits multipart fields `model`, `prompt`, `seconds`, `size`, and a required `input_reference` file for Grok special models. For the alternate Yunwu JSON API, pass `--body-format grok-json --model grok-video-3`. For other provider-specific APIs, pass `--endpoint`, `--body-format json` or `--body-format multipart`, and, for async jobs, `--poll-endpoint`. Use `--task-id` to poll an existing task without resubmitting. Use `--dry-run` to inspect the payload without spending video credits.
+For the Grok video provider, prefer `--size 9:16` for the creative brief, but `grok-video-3-10s` is normalized to `720P` for the upstream request. The default body format is `openai-videos`, which submits multipart fields `model`, `prompt`, `seconds`, `size`, and a required `input_reference` file for Grok special models. For the alternate JSON API, pass `--body-format grok-json --model grok-video-3`. For other provider-specific APIs, pass `--endpoint`, `--body-format json` or `--body-format multipart`, and, for async jobs, `--poll-endpoint`. Use `--task-id` to poll an existing task without resubmitting. Use `--dry-run` to inspect the payload without spending video credits.
 
 To package the result for Xiaohongshu after generation:
 
