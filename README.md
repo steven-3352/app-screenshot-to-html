@@ -10,6 +10,7 @@
 - 把登录页、个人中心、订单页、列表页、详情页、表单页、聊天页、仪表盘等 App 页面做成前端原型
 - 根据截图拆解 UI：状态栏、导航栏、内容区、按钮、卡片、列表、底部 Tab、Safe Area 等
 - 为页面生成或编辑头像、商品图、背景图、插画、海报、图标等位图素材
+- 为成人女性短视频生成合规创意 brief、GPT Image 2 首帧提示词和视频模型提示词，风格可以吸引人、性感但不低俗
 
 这个 Skill 的目标不是“描述图片”，而是让 Codex 像一个 App UI 复刻工程师一样工作：先理解截图结构，再写真实 HTML/CSS，然后通过浏览器截图校准效果。
 
@@ -61,8 +62,11 @@ cp -R app-screenshot-to-html ~/.codex/skills/
 └── app-screenshot-to-html/
     ├── SKILL.md
     ├── agents/openai.yaml
+    ├── references/beauty-video.md
     ├── references/image-generation.md
     ├── references/mobile-ui-reconstruction.md
+    ├── scripts/beauty_video_brief.py
+    ├── scripts/generate_video.py
     ├── scripts/html_element_editor.mjs
     ├── scripts/generate_image.py
     └── scripts/compare_screenshots.py
@@ -208,6 +212,128 @@ python3 app-screenshot-to-html/scripts/generate_image.py --prompt prompt.txt --o
 python3 app-screenshot-to-html/scripts/generate_image.py --prompt prompt.txt --image ref.png --out-dir generated-assets --size 1024x1024 --quality high --format png
 ```
 
+## 成人女性短视频 Brief 和 Prompt
+
+这个 Skill 也可以为“吸引人、性感但不低俗”的成人女性短视频生成创意 brief、GPT Image 2 首帧提示词、视频模型提示词和负面词。它适合先用 GPT Image 2 生成关键帧，再把关键帧和视频提示词交给 Grok 或其他视频模型，也可以调用已配置的视频 API 生成视频。
+
+它会和用户确认几类信息：
+
+- 参考图片或参考视频：只参考发型、服装、光线、构图、动作节奏等，不克隆真人身份
+- 人物外貌：明确是成年虚构角色，比如年龄段、发型、妆容、气质
+- 服装：颜色、材质、版型和覆盖程度
+- 场景：酒店房间、卧室、化妆台、咖啡馆、夜景窗边等
+- 性格和镜头感：自信、温柔、俏皮、清冷、暧昧但克制
+- 动作节奏：拨头发、轻微转身、靠近镜头、微笑定格等
+- 输出参数：9:16、8-12 秒、目标视频模型、是否生成首帧、是否直接调用视频 API
+
+如果用户输入里有低俗或高风险表达，Skill 会把它改写成安全视觉意图，比如把“擦边/过审”改成“平台友好、合规表达”，把“挑逗/勾引”改成“有吸引力的镜头互动”。它不会帮助规避平台审核、伪装 AI 成真人、生成未成年感、裸露或露骨性内容。
+
+视频 API 默认从本地环境读取下面几个变量。不要把真实 key 提交到仓库：
+
+```bash
+VIDEO_API_KEY="sk-..."
+VIDEO_API_BASE_URL="https://yunwu.ai"
+VIDEO_MODEL="grok-video-3-10s"
+```
+
+Yunwu Grok 视频文档当前对应默认接口 `POST /v1/videos`，请求体为 `multipart/form-data`，字段包括 `model`、`prompt`、`seconds`、`size` 和 `input_reference` 参考图文件。`grok-video-3-10s` 会把请求时长归一到 10 秒以内、尺寸归一到 `720P`。脚本会自动轮询 `GET /v1/videos/{id}`。如果上游返回 `no available platform found`，说明请求格式已通过但当前模型通道不可用；可稍后重试，或显式尝试 `--model grok-videos`，也可以用备用 JSON 格式 `--body-format grok-json --model grok-video-3`。
+
+生成问题清单：
+
+```bash
+python3 app-screenshot-to-html/scripts/beauty_video_brief.py questions
+```
+
+生成 brief 和 prompt 文件：
+
+```bash
+python3 app-screenshot-to-html/scripts/beauty_video_brief.py build \
+  --out-dir video-brief \
+  --title warm-indoor-beauty \
+  --reference ref.png \
+  --appearance "long black hair, natural makeup, confident eye contact" \
+  --outfit "cream-white fitted knit dress with a modest neckline" \
+  --scene "modern hotel-style room, warm ceiling light" \
+  --mood "confident, playful, charming, elegant" \
+  --action "brushes hair back, gently sways, smiles softly, loop-friendly ending" \
+  --model "Grok video"
+```
+
+输出文件包括：
+
+```text
+video-brief/
+├── beauty-video-brief.md
+├── beauty-video-brief.json
+├── gpt-image2-keyframe-prompt.txt
+├── video-model-prompt.txt
+└── negative-prompt.txt
+```
+
+调用视频模型生成视频。当前默认 `grok-video-3-10s` 需要参考图：
+
+```bash
+python3 app-screenshot-to-html/scripts/generate_video.py \
+  --prompt video-brief/video-model-prompt.txt \
+  --image video-brief/first-frame.png \
+  --out-dir video-brief/video-output \
+  --size 9:16 \
+  --duration 10
+```
+
+备用 Yunwu Grok JSON 格式：
+
+```bash
+python3 app-screenshot-to-html/scripts/generate_video.py \
+  --prompt video-brief/video-model-prompt.txt \
+  --out-dir video-brief/video-output \
+  --body-format grok-json \
+  --model grok-video-3 \
+  --size 9:16 \
+  --quality 720P
+```
+
+只查询已有任务、不重新提交：
+
+```bash
+python3 app-screenshot-to-html/scripts/generate_video.py \
+  --task-id "grok:..." \
+  --out-dir video-brief/video-output
+```
+
+如果想先检查请求体、不消耗视频额度：
+
+```bash
+python3 app-screenshot-to-html/scripts/generate_video.py \
+  --prompt video-brief/video-model-prompt.txt \
+  --out-dir video-brief/video-output \
+  --dry-run
+```
+
+视频做完后，如果要整理成可直接发小红书的内容并让用户直接观看效果，可以再生成发布包：
+
+```bash
+python3 app-screenshot-to-html/scripts/beauty_video_xhs_package.py \
+  --brief-json video-brief/beauty-video-brief.json \
+  --manifest video-brief/video-output/video-manifest.json \
+  --video video-brief/video-output/video-001.mp4 \
+  --cover video-brief/xhs-video-cover.jpg \
+  --out-dir video-brief/xhs-publish
+```
+
+会输出：
+
+- `xhs-publish-content.md`
+- `xhs-caption.txt`
+- `watch-effect.html`
+- `xhs-package.json`
+
+推荐直接这样说：
+
+```text
+使用 $app-screenshot-to-html，帮我做一个成人女性短视频生成方案。风格要吸引人，性感但不低俗。请先问我参考图、外貌、服装、场景和动作，再生成 GPT Image 2 首帧提示词和 Grok 视频提示词。
+```
+
 ## 推荐提示词
 
 ### 高保真 HTML 复刻
@@ -315,8 +441,11 @@ app-screenshot-to-html/
 └── app-screenshot-to-html/
     ├── SKILL.md
     ├── agents/openai.yaml
+    ├── references/beauty-video.md
     ├── references/image-generation.md
     ├── references/mobile-ui-reconstruction.md
+    ├── scripts/beauty_video_brief.py
+    ├── scripts/generate_video.py
     ├── scripts/html_element_editor.mjs
     ├── scripts/generate_image.py
     └── scripts/compare_screenshots.py
@@ -326,8 +455,11 @@ app-screenshot-to-html/
 
 - `SKILL.md`：Skill 的核心触发描述和执行流程
 - `agents/openai.yaml`：Codex UI 中展示 Skill 的名称、简介和默认提示词
+- `references/beauty-video.md`：成人女性短视频 brief、合规改写和提示词结构参考
 - `references/image-generation.md`：做图模型选择、参数提醒和 API 调用参考
 - `references/mobile-ui-reconstruction.md`：移动端 App 页面复刻参考规范
+- `scripts/beauty_video_brief.py`：生成短视频创意 brief、GPT Image 2 首帧提示词、视频提示词和负面词
+- `scripts/generate_video.py`：读取 `VIDEO_API_KEY` / `VIDEO_API_BASE_URL` / `VIDEO_MODEL` 并调用视频模型生成短视频
 - `scripts/html_element_editor.mjs`：生成 HTML 编号预览，并按编号修改文案、样式和属性
 - `scripts/generate_image.py`：文生图/图生图辅助脚本
 - `scripts/compare_screenshots.py`：原图和渲染截图的差异对比脚本
@@ -343,7 +475,7 @@ python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py ./app-sc
 如果你改了截图对比脚本，可以做语法检查：
 
 ```bash
-python3 -m py_compile app-screenshot-to-html/scripts/compare_screenshots.py
+python3 -m py_compile app-screenshot-to-html/scripts/compare_screenshots.py app-screenshot-to-html/scripts/generate_image.py app-screenshot-to-html/scripts/beauty_video_brief.py app-screenshot-to-html/scripts/generate_video.py
 ```
 
 如果你改了 HTML 编号编辑脚本，可以做 Node 语法检查：

@@ -1,4 +1,4 @@
 interface:
   display_name: "App Screenshot To HTML"
-  short_description: "Recreate app screenshots, generate assets, and number HTML elements for PM edits"
-  default_prompt: "Use $app-screenshot-to-html to recreate this mobile app screenshot as high-fidelity HTML/CSS, generating or editing image assets when needed. If follow-up PM edits are needed, generate a numbered HTML element preview."
+  short_description: "Recreate app screenshots, generate assets, number HTML, and create tasteful beauty videos"
+  default_prompt: "Use $app-screenshot-to-html to recreate this mobile app screenshot as high-fidelity HTML/CSS, generate or edit image assets when needed, or create a compliant adult beauty short-video brief with GPT Image 2 keyframe prompts and the configured video API."
