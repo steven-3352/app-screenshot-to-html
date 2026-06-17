@@ -51,8 +51,8 @@ cd app-screenshot-to-html
 然后把 Skill 文件夹复制到 Codex 的 skills 目录：
 
 ```bash
-mkdir -p ~/.codex/skills
-cp -R app-screenshot-to-html ~/.codex/skills/
+mkdir -p ~/.codex/skills/app-screenshot-to-html
+cp -R SKILL.md agents references scripts ~/.codex/skills/app-screenshot-to-html/
 ```
 
 复制完成后，目录应该类似这样：
@@ -115,7 +115,7 @@ Use $app-screenshot-to-html to recreate this mobile app screenshot as high-fidel
 Skill 里包含一个给 Codex 和产品经理协作使用的小工具：
 
 ```text
-app-screenshot-to-html/scripts/html_element_editor.mjs
+scripts/html_element_editor.mjs
 ```
 
 它适合在页面已经生成之后继续调整内容和样式。Codex 输入本地 HTML 文件，工具会生成一个带编号的预览页和元素映射；产品经理只需要看编号，然后告诉 Codex“把 12 改成什么”。
@@ -123,7 +123,7 @@ app-screenshot-to-html/scripts/html_element_editor.mjs
 生成编号预览：
 
 ```bash
-node app-screenshot-to-html/scripts/html_element_editor.mjs scan ./index.html --name homepage
+node scripts/html_element_editor.mjs scan ./index.html --name homepage
 ```
 
 输出文件默认在 `.codex-html-editor/`：
@@ -138,25 +138,25 @@ node app-screenshot-to-html/scripts/html_element_editor.mjs scan ./index.html --
 查看映射表：
 
 ```bash
-node app-screenshot-to-html/scripts/html_element_editor.mjs list .codex-html-editor/homepage.map.json
+node scripts/html_element_editor.mjs list .codex-html-editor/homepage.map.json
 ```
 
 按编号修改元素内部文案：
 
 ```bash
-node app-screenshot-to-html/scripts/html_element_editor.mjs text .codex-html-editor/homepage.map.json 12 "立即开始"
+node scripts/html_element_editor.mjs text .codex-html-editor/homepage.map.json 12 "立即开始"
 ```
 
 按编号追加或覆盖 inline 样式：
 
 ```bash
-node app-screenshot-to-html/scripts/html_element_editor.mjs style .codex-html-editor/homepage.map.json 12 "background: #111827; color: white; border-radius: 6px"
+node scripts/html_element_editor.mjs style .codex-html-editor/homepage.map.json 12 "background: #111827; color: white; border-radius: 6px"
 ```
 
 按编号修改属性，比如图片说明、链接地址、输入框占位文案：
 
 ```bash
-node app-screenshot-to-html/scripts/html_element_editor.mjs attr .codex-html-editor/homepage.map.json 8 alt "产品控制台截图"
+node scripts/html_element_editor.mjs attr .codex-html-editor/homepage.map.json 8 alt "产品控制台截图"
 ```
 
 每次写回源 HTML 前，工具会自动生成 `.bak.timestamp` 备份，并刷新编号预览和映射。
@@ -208,8 +208,8 @@ GPT_IMAGE_2_API_KEY="xxxxx"
 也可以直接调用脚本生成素材：
 
 ```bash
-python3 app-screenshot-to-html/scripts/generate_image.py --prompt prompt.txt --out-dir generated-assets --size 1024x1024 --quality high --format png
-python3 app-screenshot-to-html/scripts/generate_image.py --prompt prompt.txt --image ref.png --out-dir generated-assets --size 1024x1024 --quality high --format png
+python3 scripts/generate_image.py --prompt prompt.txt --out-dir generated-assets --size 1024x1024 --quality high --format png
+python3 scripts/generate_image.py --prompt prompt.txt --image ref.png --out-dir generated-assets --size 1024x1024 --quality high --format png
 ```
 
 ## 成人女性短视频 Brief 和 Prompt
@@ -220,7 +220,7 @@ python3 app-screenshot-to-html/scripts/generate_image.py --prompt prompt.txt --i
 
 - 参考图片或参考视频：只参考发型、服装、光线、构图、动作节奏等，不克隆真人身份
 - 人物外貌：明确是成年虚构角色，比如年龄段、发型、妆容、气质
-- 服装：颜色、材质、版型和覆盖程度
+- 服装：泳装、精致内衣、吊带短裙、露肩上衣等；可少穿但要边界清晰、若隐若现，性感不等于低俗
 - 场景：酒店房间、卧室、化妆台、咖啡馆、夜景窗边等
 - 性格和镜头感：自信、温柔、俏皮、清冷、暧昧但克制
 - 动作节奏：拨头发、轻微转身、靠近镜头、微笑定格等
@@ -250,21 +250,21 @@ Grok 视频文档当前对应默认接口 `POST /v1/videos`，请求体为 `mult
 生成问题清单：
 
 ```bash
-python3 app-screenshot-to-html/scripts/beauty_video_brief.py questions
+python3 scripts/beauty_video_brief.py questions
 ```
 
 生成 brief 和 prompt 文件：
 
 ```bash
-python3 app-screenshot-to-html/scripts/beauty_video_brief.py build \
+python3 scripts/beauty_video_brief.py build \
   --out-dir video-brief \
-  --title warm-indoor-beauty \
+  --title poolside-sexy-beauty \
   --reference ref.png \
-  --appearance "long black hair, natural makeup, confident eye contact" \
-  --outfit "cream-white fitted knit dress with a modest neckline" \
-  --scene "modern hotel-style room, warm ceiling light" \
-  --mood "confident, playful, charming, elegant" \
-  --action "brushes hair back, gently sways, smiles softly, loop-friendly ending" \
+  --appearance "long dark hair, refined makeup, luminous skin, alluring eyes, photogenic beauty" \
+  --outfit "stylish minimal black one-piece swimsuit, tasteful coverage, subtle skin reveal without exposure" \
+  --scene "poolside at golden hour with soft backlight" \
+  --mood "confident, sensual, elegant, playful charm" \
+  --action "slow hair flip, gentle hip sway, soft smile, subtle shoulder turn, loop-friendly ending" \
   --model "Grok video"
 ```
 
@@ -274,6 +274,7 @@ python3 app-screenshot-to-html/scripts/beauty_video_brief.py build \
 video-brief/
 ├── beauty-video-brief.md
 ├── beauty-video-brief.json
+├── video-prompt-baseline.txt
 ├── gpt-image2-keyframe-prompt.txt
 ├── video-model-prompt.txt
 └── negative-prompt.txt
@@ -282,7 +283,7 @@ video-brief/
 如果没有参考图，先用首帧提示词生成一张首帧：
 
 ```bash
-python3 app-screenshot-to-html/scripts/generate_image.py \
+python3 scripts/generate_image.py \
   --prompt video-brief/gpt-image2-keyframe-prompt.txt \
   --out-dir video-brief \
   --size 1024x1536 --quality high --format png
@@ -291,7 +292,7 @@ python3 app-screenshot-to-html/scripts/generate_image.py \
 然后调用视频模型生成视频。当前默认 `grok-video-3-10s` 需要参考图，把参考图或上一步生成的首帧用 `--image` 传入：
 
 ```bash
-python3 app-screenshot-to-html/scripts/generate_video.py \
+python3 scripts/generate_video.py \
   --prompt video-brief/video-model-prompt.txt \
   --image video-brief/first-frame.png \
   --out-dir video-brief/video-output \
@@ -302,7 +303,7 @@ python3 app-screenshot-to-html/scripts/generate_video.py \
 备用 Grok JSON 格式：
 
 ```bash
-python3 app-screenshot-to-html/scripts/generate_video.py \
+python3 scripts/generate_video.py \
   --prompt video-brief/video-model-prompt.txt \
   --out-dir video-brief/video-output \
   --body-format grok-json \
@@ -314,7 +315,7 @@ python3 app-screenshot-to-html/scripts/generate_video.py \
 只查询已有任务、不重新提交：
 
 ```bash
-python3 app-screenshot-to-html/scripts/generate_video.py \
+python3 scripts/generate_video.py \
   --task-id "grok:..." \
   --out-dir video-brief/video-output
 ```
@@ -322,7 +323,7 @@ python3 app-screenshot-to-html/scripts/generate_video.py \
 如果想先检查请求体、不消耗视频额度：
 
 ```bash
-python3 app-screenshot-to-html/scripts/generate_video.py \
+python3 scripts/generate_video.py \
   --prompt video-brief/video-model-prompt.txt \
   --out-dir video-brief/video-output \
   --dry-run
@@ -331,7 +332,7 @@ python3 app-screenshot-to-html/scripts/generate_video.py \
 视频做完后，如果要整理成可直接发小红书的内容并让用户直接观看效果，可以再生成发布包：
 
 ```bash
-python3 app-screenshot-to-html/scripts/beauty_video_xhs_package.py \
+python3 scripts/beauty_video_xhs_package.py \
   --brief-json video-brief/beauty-video-brief.json \
   --manifest video-brief/video-output/video-manifest.json \
   --video video-brief/video-output/video-001.mp4 \
@@ -403,7 +404,7 @@ Codex 使用这个 Skill 后，通常会输出：
 Skill 中包含一个可选脚本：
 
 ```text
-app-screenshot-to-html/scripts/compare_screenshots.py
+scripts/compare_screenshots.py
 ```
 
 它可以比较原始截图和浏览器渲染后的截图，输出平均差异、RMS 差异和可见差异比例。
@@ -411,7 +412,7 @@ app-screenshot-to-html/scripts/compare_screenshots.py
 使用方式：
 
 ```bash
-python3 app-screenshot-to-html/scripts/compare_screenshots.py source.png rendered.png --diff diff.png
+python3 scripts/compare_screenshots.py source.png rendered.png --diff diff.png
 ```
 
 如果提示缺少 Pillow，可以安装：
@@ -456,17 +457,16 @@ diff_image: diff.png
 ```text
 app-screenshot-to-html/
 ├── README.md
-└── app-screenshot-to-html/
-    ├── SKILL.md
-    ├── agents/openai.yaml
-    ├── references/beauty-video.md
-    ├── references/image-generation.md
-    ├── references/mobile-ui-reconstruction.md
-    ├── scripts/beauty_video_brief.py
-    ├── scripts/generate_video.py
-    ├── scripts/html_element_editor.mjs
-    ├── scripts/generate_image.py
-    └── scripts/compare_screenshots.py
+├── SKILL.md
+├── agents/openai.yaml
+├── references/beauty-video.md
+├── references/image-generation.md
+├── references/mobile-ui-reconstruction.md
+├── scripts/beauty_video_brief.py
+├── scripts/generate_video.py
+├── scripts/html_element_editor.mjs
+├── scripts/generate_image.py
+└── scripts/compare_screenshots.py
 ```
 
 说明：
@@ -487,19 +487,19 @@ app-screenshot-to-html/
 修改 Skill 后，可以运行 Codex 官方校验脚本：
 
 ```bash
-python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py ./app-screenshot-to-html
+python3 ~/.codex/skills/.system/skill-creator/scripts/quick_validate.py .
 ```
 
 如果你改了截图对比脚本，可以做语法检查：
 
 ```bash
-python3 -m py_compile app-screenshot-to-html/scripts/compare_screenshots.py app-screenshot-to-html/scripts/generate_image.py app-screenshot-to-html/scripts/beauty_video_brief.py app-screenshot-to-html/scripts/generate_video.py
+python3 -m py_compile scripts/compare_screenshots.py scripts/generate_image.py scripts/beauty_video_brief.py scripts/generate_video.py
 ```
 
 如果你改了 HTML 编号编辑脚本，可以做 Node 语法检查：
 
 ```bash
-node --check app-screenshot-to-html/scripts/html_element_editor.mjs
+node --check scripts/html_element_editor.mjs
 ```
 
 ## 重要限制

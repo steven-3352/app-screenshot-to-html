@@ -44,7 +44,7 @@ Call `scripts/generate_image.py` from the skill parent directory.
 Text-to-image:
 
 ```bash
-python3 app-screenshot-to-html/scripts/generate_image.py \
+python3 scripts/generate_image.py \
   --prompt prompt.txt \
   --out-dir generated-assets \
   --size 1024x1024 \
@@ -56,7 +56,7 @@ python3 app-screenshot-to-html/scripts/generate_image.py \
 Image-to-image or edit:
 
 ```bash
-python3 app-screenshot-to-html/scripts/generate_image.py \
+python3 scripts/generate_image.py \
   --prompt prompt.txt \
   --image ref.png \
   --image ref2.png \

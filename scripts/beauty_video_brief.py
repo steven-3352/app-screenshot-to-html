@@ -12,40 +12,48 @@ from pathlib import Path
 from typing import Any
 
 
+FIXED_CREATIVE_BASELINE = (
+    "Primary goal: a genuinely beautiful adult woman. "
+    "Sexy but never vulgar: minimal tasteful outfits such as swimwear, lingerie, bodysuit, "
+    "off-shoulder tops, or short skirts are allowed; show subtle skin and silhouette with "
+    "an implied allure rather than explicit exposure. "
+    "Allure should feel elegant, confident, and platform-friendly."
+)
+
 DEFAULTS = {
-    "title": "tasteful-beauty-short",
+    "title": "sexy-beauty-short",
     "duration": "10s",
     "aspect": "9:16",
-    "style": "Douyin-style tasteful smartphone short video",
-    "persona": "fictional adult woman, 25 years old",
-    "appearance": "long black hair, natural makeup, confident eye contact",
-    "outfit": "tasteful fitted dress with a modest neckline",
-    "scene": "warm modern indoor room with soft ceiling light",
-    "mood": "confident, playful, charming, elegant",
-    "action": "gentle sway, brushing hair back, soft smile, subtle camera interaction",
-    "camera": "fixed smartphone camera at chest height, medium close-up framing",
+    "style": "Douyin-style sensual smartphone short video, sexy but not vulgar",
+    "persona": "fictional adult woman, 25 years old, strikingly beautiful face and figure",
+    "appearance": "long dark hair, refined makeup, luminous skin, alluring eyes, photogenic beauty",
+    "outfit": "stylish minimal black one-piece swimsuit, tasteful coverage, subtle skin reveal without exposure",
+    "scene": "poolside at golden hour with soft backlight and clean background",
+    "mood": "confident, sensual, elegant, playful charm",
+    "action": "slow hair flip, gentle hip sway, soft smile, subtle shoulder turn, loop-friendly ending",
+    "camera": "fixed smartphone camera, medium close-up framing that highlights beauty and silhouette",
 }
 
 QUESTION_SET = [
     "有没有参考图片或参考视频？如果有，说明只参考哪些部分：脸型/发型/服装/光线/场景/动作。",
-    "人物外貌怎么设定？请明确是成年虚构角色，例如年龄段、发型、妆容、气质。",
-    "服装要什么方向？例如白色针织裙、通勤吊带裙、黑色连衣裙；避免透明、过度暴露或未成年感。",
-    "场景在哪里？例如酒店房间、卧室、化妆台、咖啡馆、夜景窗边。",
-    "人物性格和镜头感是什么？例如自信、温柔、俏皮、清冷、暧昧但克制。",
-    "动作节奏是什么？例如拨头发、轻微转身、靠近镜头、微笑定格；避免露骨动作。",
+    "人物外貌怎么设定？请明确是成年虚构角色，且首先要好看，例如年龄段、发型、妆容、气质。",
+    "服装要什么方向？例如泳装、精致内衣、吊带短裙、露肩上衣；可少穿但要边界清晰、若隐若现，性感不等于低俗。",
+    "场景在哪里？例如泳池边、酒店房间、卧室、化妆台、夜景窗边。",
+    "人物性格和镜头感是什么？例如自信、温柔、俏皮、清冷、性感但有品味。",
+    "动作节奏是什么？例如拨头发、轻微转身、靠近镜头、微笑定格；自然有张力，避免露骨动作。",
     "输出参数是什么？例如 9:16、8-12 秒、Grok/其他视频模型、是否先用 GPT Image 2 生成首帧。",
 ]
 
 REWRITE_RULES = [
     (r"少女感|幼态感|童颜感", "清新但成熟的成人气质"),
     (r"(?i)\bteen\b|未成年|少女|萝莉|高中生|学生妹|幼态|童颜", "成年女性、成熟气质"),
-    (r"(?i)\bnude\b|裸|全裸|露点|走光", "不暴露、平台友好的服装"),
-    (r"透明|透视|真空|情趣|内衣外穿", "有设计感但不透明的时装"),
+    (r"(?i)\bnude\b|裸|全裸|露点|走光", "不暴露、边界清晰的服装"),
+    (r"透明|透视|真空", "有质感、边界清晰且不透明的时装"),
     (r"擦边|过审|绕过审核|规避审核|躲审核", "平台友好、合规表达"),
     (r"撩人|勾引|挑逗", "有吸引力的镜头互动"),
-    (r"火辣|性感爆棚|欲", "吸睛、优雅克制、有张力"),
-    (r"深V|低胸|事业线|胸部特写", "修身但领口得体"),
-    (r"臀|屁股|翘臀|下体|私密", "自然体态和整体造型"),
+    (r"火辣|欲|低俗|艳俗", "性感但有品味、克制高级"),
+    (r"事业线|胸部特写|露点|走光", "适度曲线与若隐若现，但不特写敏感部位"),
+    (r"下体|私密部位|性行为", "自然体态和整体造型"),
     (r"脱衣|掀衣|舔|抚摸|性暗示", "自然手部动作和轻微律动"),
     (r"像真人|看不出AI|伪装真人", "自然质感，并按平台要求标注 AI 生成"),
 ]
@@ -193,7 +201,11 @@ def build_brief(args: argparse.Namespace) -> dict[str, Any]:
         "video_prompt": video_prompt,
         "negative_prompt": negative_prompt,
         "storyboard": storyboard,
+        "creative_baseline": FIXED_CREATIVE_BASELINE,
         "compliance_notes": [
+            "Primary subject must read as a genuinely beautiful adult woman.",
+            "Swimwear, lingerie, and other minimal outfits are allowed when coverage stays clear and non-explicit.",
+            "Sexy means elegant allure and subtle reveal, not vulgar posing or explicit content.",
             "Use only fictional adult characters or references the user has rights to use.",
             "Do not preserve the identity of a private person from a reference image unless the user confirms consent and rights.",
             "Keep the result tasteful: no nudity, no explicit sexual act, no underage styling, no coercion.",
@@ -212,7 +224,8 @@ def make_keyframe_prompt(fields: dict[str, Any]) -> str:
 
     return "\n".join(
         [
-            f"Vertical {fields['aspect']} smartphone-style keyframe for a tasteful short video.",
+            f"Vertical {fields['aspect']} smartphone-style keyframe for a sensual short video.",
+            FIXED_CREATIVE_BASELINE,
             reference_note
             + f"Subject: {fields['persona']}; {fields['appearance']}.",
             f"Outfit: {fields['outfit']}.",
@@ -220,7 +233,7 @@ def make_keyframe_prompt(fields: dict[str, Any]) -> str:
             f"Mood and personality: {fields['mood']}.",
             f"Camera: {fields['camera']}.",
             "Realistic phone-camera lighting, natural skin texture, subtle beauty filter, "
-            "tasteful and non-explicit, elegant and attractive without vulgarity.",
+            "sexy but not vulgar, elegant allure with implied rather than explicit reveal.",
         ]
     ).strip()
 
@@ -238,14 +251,16 @@ def make_video_prompt(fields: dict[str, Any]) -> str:
     return "\n".join(
         [
             f"Create a {fields['duration']} vertical {fields['aspect']} {style_phrase}.",
+            FIXED_CREATIVE_BASELINE,
             reference_note
             + f"The subject is a {fields['persona']} with {fields['appearance']}.",
             f"She wears {fields['outfit']} in {fields['scene']}.",
             f"Personality: {fields['mood']}.",
             f"Action: {fields['action']}.",
             f"Camera and motion: {fields['camera']}; stable framing, subtle natural motion, realistic cloth and hair movement.",
-            "Make it attractive, tasteful, confident, and platform-friendly. "
-            "No nudity, no explicit sexual content, no underage styling, no celebrity likeness, no real-person impersonation.",
+            "Make her genuinely beautiful first, then sensual and confident. "
+            "Sexy but not vulgar: minimal outfits such as swimwear or lingerie are fine when coverage stays clear. "
+            "Platform-friendly, no nudity, no explicit sexual content, no underage styling, no celebrity likeness, no real-person impersonation.",
         ]
     )
 
@@ -281,6 +296,7 @@ def write_outputs(out_dir: Path, result: dict[str, Any]) -> list[Path]:
     paths = {
         "brief_json": out_dir / "beauty-video-brief.json",
         "brief_md": out_dir / "beauty-video-brief.md",
+        "baseline": out_dir / "video-prompt-baseline.txt",
         "keyframe": out_dir / "gpt-image2-keyframe-prompt.txt",
         "video": out_dir / "video-model-prompt.txt",
         "negative": out_dir / "negative-prompt.txt",
@@ -291,6 +307,7 @@ def write_outputs(out_dir: Path, result: dict[str, Any]) -> list[Path]:
         encoding="utf-8",
     )
     paths["brief_md"].write_text(render_markdown(result), encoding="utf-8")
+    paths["baseline"].write_text(result["creative_baseline"] + "\n", encoding="utf-8")
     paths["keyframe"].write_text(result["keyframe_prompt"] + "\n", encoding="utf-8")
     paths["video"].write_text(result["video_prompt"] + "\n", encoding="utf-8")
     paths["negative"].write_text(result["negative_prompt"] + "\n", encoding="utf-8")
@@ -308,6 +325,12 @@ def render_markdown(result: dict[str, Any]) -> str:
         f"- Aspect: {brief['aspect']}",
         f"- Model: {brief['model']}",
         f"- References: {', '.join(brief['reference']) if brief['reference'] else 'none'}",
+        "",
+        "## Fixed Creative Baseline",
+        "",
+        "```text",
+        result["creative_baseline"],
+        "```",
         "",
         "## Normalized Brief",
         "",

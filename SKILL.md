@@ -63,6 +63,7 @@ Use this branch when the user wants an attractive adult woman short video, a GPT
 6. Use `scripts/beauty_video_brief.py build ...` to generate:
    - `beauty-video-brief.md`
    - `beauty-video-brief.json`
+   - `video-prompt-baseline.txt`
    - `gpt-image2-keyframe-prompt.txt`
    - `video-model-prompt.txt`
    - `negative-prompt.txt`
@@ -71,7 +72,7 @@ Use this branch when the user wants an attractive adult woman short video, a GPT
    - If there is no reference image, generate a first frame with `scripts/generate_image.py` using the keyframe prompt, then inspect it before using it for video.
 8. If the user wants to generate the video, use `scripts/generate_video.py` with the first-frame image passed as `--image`. It reads `VIDEO_API_KEY`, `VIDEO_API_BASE_URL`, and `VIDEO_MODEL` from environment files, so the key and base URL are config-only and require no code change. The helper defaults to `POST /v1/videos` and polls `GET /v1/videos/{id}`. The default `grok-video-3-10s` model requires a reference image, so always have a first frame ready.
 9. If the API returns `no available platform found`, the request shape is accepted but the upstream model is unavailable; retry later or try the documented model names `grok-videos` for `--body-format openai-videos` or `grok-video-3` for `--body-format grok-json`.
-10. Final prompts and videos should be sexy-but-not-vulgar: adult, tasteful, non-explicit, no underage styling, no celebrity likeness, no real-person cloning, and follow platform AI-content disclosure requirements.
+10. Final prompts and videos should be sexy-but-not-vulgar: adult, beautiful first, minimal-but-covered outfits such as swimwear or lingerie are allowed, non-explicit, no underage styling, no celebrity likeness, no real-person cloning, and follow platform AI-content disclosure requirements.
 11. After generating a video, if the user wants a shareable post, use `scripts/beauty_video_xhs_package.py` to create a Xiaohongshu-ready caption, publish checklist, and local watch page that plays the generated MP4.
 
 ## Reconstruction Rules
@@ -105,7 +106,7 @@ For detailed mobile UI heuristics, read `references/mobile-ui-reconstruction.md`
 Use `scripts/compare_screenshots.py` when two screenshot files are available:
 
 ```bash
-python3 app-screenshot-to-html/scripts/compare_screenshots.py source.png rendered.png --diff diff.png
+python3 scripts/compare_screenshots.py source.png rendered.png --diff diff.png
 ```
 
 Use the numeric result as guidance, not as the only quality signal. A low pixel difference can still hide important text or alignment mistakes.
@@ -117,7 +118,7 @@ Use `scripts/html_element_editor.mjs` when the user wants a product manager or n
 Generate a numbered preview and mapping from a local static HTML file:
 
 ```bash
-node app-screenshot-to-html/scripts/html_element_editor.mjs scan ./index.html --name homepage
+node scripts/html_element_editor.mjs scan ./index.html --name homepage
 ```
 
 Open `.codex-html-editor/homepage.numbered.html` for the reviewer. The preview outlines editable elements and labels them with stable numbers for that scan. Keep `.codex-html-editor/homepage.map.json` for follow-up edits.
@@ -125,15 +126,15 @@ Open `.codex-html-editor/homepage.numbered.html` for the reviewer. The preview o
 List the mapped elements:
 
 ```bash
-node app-screenshot-to-html/scripts/html_element_editor.mjs list .codex-html-editor/homepage.map.json
+node scripts/html_element_editor.mjs list .codex-html-editor/homepage.map.json
 ```
 
 Apply reviewer requests by number:
 
 ```bash
-node app-screenshot-to-html/scripts/html_element_editor.mjs text .codex-html-editor/homepage.map.json 12 "立即开始"
-node app-screenshot-to-html/scripts/html_element_editor.mjs style .codex-html-editor/homepage.map.json 12 "background: #111827; color: white"
-node app-screenshot-to-html/scripts/html_element_editor.mjs attr .codex-html-editor/homepage.map.json 8 alt "产品控制台截图"
+node scripts/html_element_editor.mjs text .codex-html-editor/homepage.map.json 12 "立即开始"
+node scripts/html_element_editor.mjs style .codex-html-editor/homepage.map.json 12 "background: #111827; color: white"
+node scripts/html_element_editor.mjs attr .codex-html-editor/homepage.map.json 8 alt "产品控制台截图"
 ```
 
 The helper writes a timestamped backup before changing the source HTML, then refreshes the map and preview. For React, Vue, Tailwind, or other source-driven projects, use this helper for reviewer communication, then prefer editing the component/source files instead of built HTML.
@@ -143,8 +144,8 @@ The helper writes a timestamped backup before changing the source HTML, then ref
 Use `scripts/generate_image.py` for GPT Image 2 generation/editing when API credentials are available:
 
 ```bash
-python3 app-screenshot-to-html/scripts/generate_image.py --prompt prompt.txt --out-dir generated-assets
-python3 app-screenshot-to-html/scripts/generate_image.py --prompt prompt.txt --image ref.png --out-dir generated-assets
+python3 scripts/generate_image.py --prompt prompt.txt --out-dir generated-assets
+python3 scripts/generate_image.py --prompt prompt.txt --image ref.png --out-dir generated-assets
 ```
 
 The script chooses the image model from the presence of reference images and writes output files plus a JSON manifest.
@@ -154,8 +155,8 @@ The script chooses the image model from the presence of reference images and wri
 Use `scripts/beauty_video_brief.py` to collect inputs and write prompt artifacts for tasteful adult beauty short videos:
 
 ```bash
-python3 app-screenshot-to-html/scripts/beauty_video_brief.py questions
-python3 app-screenshot-to-html/scripts/beauty_video_brief.py build --out-dir video-brief --appearance "long black hair, natural makeup" --outfit "cream-white fitted dress with a modest neckline"
+python3 scripts/beauty_video_brief.py questions
+python3 scripts/beauty_video_brief.py build --out-dir video-brief --appearance "long black hair, natural makeup" --outfit "cream-white fitted dress with a modest neckline"
 ```
 
 If the helper returns `needs_human_review`, inspect its safety flags before generating images or video prompts.
@@ -163,7 +164,7 @@ If the helper returns `needs_human_review`, inspect its safety flags before gene
 Use `scripts/generate_video.py` to call the configured Grok/video model:
 
 ```bash
-python3 app-screenshot-to-html/scripts/generate_video.py --prompt video-brief/video-model-prompt.txt --image video-brief/first-frame.png --out-dir video-brief/video-output --size 9:16 --duration 10
+python3 scripts/generate_video.py --prompt video-brief/video-model-prompt.txt --image video-brief/first-frame.png --out-dir video-brief/video-output --size 9:16 --duration 10
 ```
 
 For the Grok video provider, prefer `--size 9:16` for the creative brief, but `grok-video-3-10s` is normalized to `720P` for the upstream request. The default body format is `openai-videos`, which submits multipart fields `model`, `prompt`, `seconds`, `size`, and a required `input_reference` file for Grok special models. For the alternate JSON API, pass `--body-format grok-json --model grok-video-3`. For other provider-specific APIs, pass `--endpoint`, `--body-format json` or `--body-format multipart`, and, for async jobs, `--poll-endpoint`. Use `--task-id` to poll an existing task without resubmitting. Use `--dry-run` to inspect the payload without spending video credits.
@@ -171,7 +172,7 @@ For the Grok video provider, prefer `--size 9:16` for the creative brief, but `g
 To package the result for Xiaohongshu after generation:
 
 ```bash
-python3 app-screenshot-to-html/scripts/beauty_video_xhs_package.py \
+python3 scripts/beauty_video_xhs_package.py \
   --brief-json video-brief/beauty-video-brief.json \
   --manifest video-brief/video-output/video-manifest.json \
   --video video-brief/video-output/video-001.mp4 \
